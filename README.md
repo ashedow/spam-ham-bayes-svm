@@ -28,8 +28,6 @@ So, if he has -5 score for mark mail as spam and -10 for reject mail, this mail 
 * mail conmtains only one link
 * Mail without subject
 
-
-
 ### Naive Bayes 
 Naive Bayes algorithm is one of the most well-known supervised algorithms. As we explained before, every machine learning algorithm has two phases; training and testing. Because of the nature of the supervised problem, Naive Bayes algorithm uses the dataset which has labeled samples. 
 
@@ -41,35 +39,35 @@ Naive Bayes algorithm is based on the [Bayesian Theorem](https://en.wikipedia.or
 ![](prob_spam_or_ham.png)
 4. Finally, pHam and pSpam are compared and ranked. And test sample is assigned to that class.
 
-
 ### SVM
 
-Trying different SVM give the folowwing result:
+Trying different SVM give the folowwing results, and  GridSearch can give the better result
 
-> see `create_model/test_svm.py`
-
-Linear SVM:
-[[126   4]
-[  5 125]]
-Multinomial NB:
-[[129   1]
-[  9 121]]
-SVM:
-[[129   1]
-[ 62  68]]
-GridSearch on SVM:
-[[126   4]
-[  2 128]]
-
-So GridSearch can give the better result
-
-## Spam pattern
+## Spam detecting
 
 **ham** - not spam.
 **spam** - really spam.
 
+1. Loading and prepare spam/ham base
+---
+/data
+|--/spam - spam examples
+|--/ham - ham examples
+|--/test_spam - spam for test models
+|--/test_ham - ham for test models
+---
 
-## Spam filter
+2. Create different models.
+
+from sklearn create and test models:
+MultinomialNB()
+GaussianNB()
+BernoulliNB()
+svm.LinearSVC()
+GridSearchCV(svm.SVC()
+
+3. Pickle the best model
 
 TODO:
-* Cteate implementation for rspamd
+* Add cheking all mail, with headers and so on
+* Create implementation for rspamd

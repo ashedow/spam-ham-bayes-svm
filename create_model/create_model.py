@@ -26,18 +26,7 @@ def create_list(path):
     f.close()
     return lst
 
-# commonwords = []
-
-# def lemmatize(word):
-#     return word
-
-# def word_tokenize(text):
-#     return text.split(" ")
-
 def process_email(texts):
-    # wordtokens = [lemmatize(word.lower()) for word in word_tokenize(sentence)]
-    # features = dict((word, True) for word in wordtokens if word not in commonwords)
-    # return features
     emails = []
     lemmatizer = WordNetLemmatizer()
     for sentence in texts:
@@ -47,7 +36,8 @@ def process_email(texts):
             word = word.lower()
             lemma = lemmatizer.lemmatize(word)
             processed_email.append(lemma)
-        emails.append(processed_email)
+        emails = emails + processed_email
+        # emails.append(processed_email)
     return processed_email
 
 def review_messages(texts):
