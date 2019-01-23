@@ -69,5 +69,7 @@ GridSearchCV(svm.SVC()
 3. Pickle the best model
 
 TODO:
+* Testing code
+* Optimisation process (treads) and memory usage
 * Add cheking all mail, with headers and so on
 * Create implementation for rspamd

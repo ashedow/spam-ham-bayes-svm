@@ -5,8 +5,9 @@ from pandas import DataFrame
 from numpy import zeros
 from nltk.corpus import stopwords
 from nltk import word_tokenize, WordNetLemmatizer, classify, NaiveBayesClassifier, stem
+# from nltk.classify.scikitlearn import SklearnClassifier
+from string import punctuation
 from sklearn import svm
-from nltk.classify.scikitlearn import SklearnClassifier
 from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.naive_bayes import MultinomialNB, GaussianNB, BernoulliNB
 from sklearn.metrics import confusion_matrix, classification_report, accuracy_score
@@ -26,38 +27,33 @@ def create_list(path):
     f.close()
     return lst
 
-def process_email(texts):
+def process_email(texts, custom_stopwords=[]):
     emails = []
     lemmatizer = WordNetLemmatizer()
+    my_stopwords = stopwords.words('english') + list(punctuation) + custom_stopwords
     for sentence in texts:
         tokens = word_tokenize(sentence)
         processed_email = []
         for word in tokens:
-            word = word.lower()
-            lemma = lemmatizer.lemmatize(word)
-            processed_email.append(lemma)
+            lemma = lemmatizer.lemmatize(word.lower())
+            if lemma not in my_stopwords and len(lemma)>2:
+                processed_email.append(lemma)
         emails = emails + processed_email
-        # emails.append(processed_email)
-    return processed_email
+    return emails
 
 def review_messages(texts):
     stoplist = stopwords.words('english')
     stoplist.append('Subject')
     stemmer = stem.SnowballStemmer('english')
 
-    # for text in texts:
-    msg = [word for word in process_email(texts) if word not in stoplist]
+    words = process_email(texts)
+    msg = []
+    for word in words:
+        if word not in stoplist:
+            msg.append(word)
     # using a stemmer
     msg = " ".join([stemmer.stem(word) for word in msg])
     return msg
-
-# def data_frame(text, classification):
-#     rows = []
-#     index = []
-#     for filename, message in review_messages(text):
-#         rows.append({'message': message, 'class': classification})
-#         index.append(filename)
-#     return DataFrame(rows, index=index)
 
 def data_frame(text_mail, classification):
     rows = []
@@ -70,12 +66,17 @@ def data_frame(text_mail, classification):
 
 def prepare_train():
     data = DataFrame({'message': [], 'class': []})
-    spam = review_messages(create_list(SPAM_PATH))
-    ham = review_messages(create_list(HAM_PATH))
+    # Loading and clean the email-dataset 
+    spam_data = create_list(SPAM_PATH)
+    ham_data = create_list(HAM_PATH)
+    spam = process_email(spam_data, ['subject'])
+    ham = process_email(ham_data, ['subject'])
+    spam = review_messages(spam)
+    ham = review_messages(ham)
 
     data = data.append(data_frame(spam, 'spam'))
     data = data.append(data_frame(ham, 'ham'))
-    
+    random.shuffle(data)    
     return data
 
 def prepare_test():
@@ -83,13 +84,16 @@ def prepare_test():
     test_spam = review_messages(create_list(TEST_SPAM_PATH))
     test_ham = review_messages(create_list(TEST_HAM_PATH))
 
-    test_data = test_data.append(data_frame(test_spam, 'ham'))
-    test_data = test_data.append(data_frame(test_ham, 'ham'))
+    frame_spam = data_frame(test_ham, 'ham')
+    frame_ham = data_frame(test_spam, 'ham')
+
+    test_data = test_data.append(frame_ham)
+    test_data = test_data.append(frame_spam)
     return test_data
 
 def testing_models(data, test_data):
 
-    vectorizer = CountVectorizer()
+    vectorizer = CountVectorizer(min_df=1)
     counts = vectorizer.fit_transform(data['message'].values)
     targets = data['class'].values
     param_grid = {'C':[0.1,1,10,100,1000],'gamma':[1,0.1,0.01,0.001,0.0001]}
@@ -126,8 +130,7 @@ def pickle_model(clf):
     with open(filename, 'wb') as f:
         pickle.dump(clf, f)
 
-
-if __name__ == "__main__":
+def main():
     data = prepare_train()
     test_data = prepare_test()
 
@@ -136,3 +139,4 @@ if __name__ == "__main__":
 
     print("SHOW_MOST_INF_FEATURES", clf.show_most_informative_features(20))
     pickle_model(clf)
+    return clf
